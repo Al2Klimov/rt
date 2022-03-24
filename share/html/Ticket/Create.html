@@ -506,6 +506,8 @@ if ($ARGS{IncludeArticleId}) {
 
 # check email addresses for RT's
 {
+    my $recipient_check = RT::Ticket->new($session{'CurrentUser'});
+
     foreach my $field ( qw(Requestors Cc AdminCc) ) {
         my $value = $ARGS{ $field };
         next unless defined $value && length $value;
@@ -524,7 +526,14 @@ if ($ARGS{IncludeArticleId}) {
                 }
             }
             else {
-                push @emails, $entry->{value};
+                my($rref, $mref) = $recipient_check->ParseInputPrincipals($entry->{value});
+                if (!$rref->[0] or !$rref->[0]->id) {
+                    push @results, loc("Couldn't add watcher '[_2]' as [_1]: [_3]", $field, $entry->{value}, $mref->[0]);
+                    $checks_failure ||= 1;
+                }
+                else {
+                    push @emails, $entry->{value};
+                }
             }
         }
         $ARGS{ $field } = join ', ', grep defined, @emails;
