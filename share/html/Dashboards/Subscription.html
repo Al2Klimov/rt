@@ -230,7 +230,7 @@
       <div class="row">
         <div class="col-auto">
           <select name="Rows" class="form-control selectpicker">
-% for my $rows (1, 2, 5, 10, 15, 20, 25, 50, 75, 100, 0) {
+% for my $rows ( @{ $fields{ RowOptions } } ) {
             <option value="<% $rows %>" <% $fields{'Rows'} eq $rows ? 'selected="selected"' : '' |n %>><% loc($rows || 'Unlimited') %></option>
 % }
           </select>
@@ -332,6 +332,7 @@ my %fields = (
     Dow         => 'Monday',
     Dom         => 1,
     Rows        => 20,
+    RowOptions  => [1, 2, 5, 10, 15, 20, 25, 50, 75, 100, 0],
     Recipients  => { Users => [], Groups => [] },
     Fow         => 1,
     Counter     => 0,
@@ -339,13 +340,13 @@ my %fields = (
     SuppressIfEmpty => 0,
     Context     => 'subscriber',
 );
-
 $m->callback( %ARGS, CallbackName => 'SubscriptionFields', FieldsRef => \%fields,
      SubscriptionObj => $SubscriptionObj, DashboardObj => $Dashboard);
 
 # update any fields with the values from the subscription object
 if ($SubscriptionObj) {
     for my $field (keys %fields) {
+      next if $field eq 'RowOptions'; # immutable
         $fields{$field} = $SubscriptionObj->SubValue($field);
     }
 }
